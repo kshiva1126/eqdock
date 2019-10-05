@@ -8,7 +8,7 @@ RUN apt-get install -y --no-install-recommends \
     unzip \
     wget \
     zlib1g-dev \
-    iproute \
+    iproute2 \
     libsqlite3-dev \
     libpq-dev \
     libicu-dev \
