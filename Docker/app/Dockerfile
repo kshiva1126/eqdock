@@ -46,5 +46,10 @@ RUN curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/bi
 
 COPY dockerbuild/.vimrc /root/
 
+COPY dockerbuild/installEccube.sh /var/www/html
+COPY dockerbuild/upload.tar.gz /var/www/html
+
+RUN cd /var/www/html && chmod 755 upload.tar.gz && ./installEccube.sh
+
 USER root
 

@@ -2,16 +2,44 @@ CR=`echo $'\n> '`
 
 checkFromTheBeginningOrTheMiddle()
 {
-  read -ep "すでに存在しているEC-CUBEの"
+  read -ep "EC-CUBEクローンを行います。
+GitHubの公式EC-CUBEリポジトリからクローンする場合は1、
+既存プロジェクトからクローンする場合は2を選択してください ${CR}" IS_BEGINNING_OR_MIDDLE
+  while [ "_${IS_BEGINNING_OR_MIDDLE}" != "_1" ] && [ "_${IS_BEGINNING_OR_MIDDLE}" != "_2" ]
+  do
+    read -ep "1か2で選択してください ${CR}" IS_BEGINNING_OR_MIDDLE
+  done
+
+  case "$IS_BEGINNING_OR_MIDDLE" in
+    "1" )
+      local TAG=`setEccubeVersion` "$IS_BEGINNING_OR_MIDDLE"
+      local URL="https://github.com/EC-CUBE/ec-cube.git -b ${TAG}"
+      ;;
+    "2" )
+      local URL=`getExistingURL`
+      local TAG=`setEccubeVersion` "$IS_BEGINNING_OR_MIDDLE"
+      ;;
+  esac
+
+  cloneEccube "$URL"
+  echo "$TAG"
 }
-
-
 
 # SELECT EC-CUBE VERSION
 setEccubeVersion()
 {
+  IS_BEGINING_OR_MIDDLE="$1"
+  echo "$IS_BEGINNING_OR_MIDDLE" 1>&2
   local -a ARRAY=("4.0.0" "4.0.1" "4.0.2" "4.0.3")
-  echo -e "インストールしたいEC-CUBEのバージョンを選択してください" 1>&2
+  case "$IS_BEGINNING_OR_MIDDLE" in
+    "1" )
+      local MSG="インストールしたいEC-CUBEのバージョンを選択してください"
+      ;;
+    "2" )
+      local MSG="そのプロジェクトのEC-CUBEのバージョンを選択してください"
+      ;;
+  esac
+  echo "$MSG" 1>&2
   select VAR in "${ARRAY[@]}"
   do
     if [ "$REPLY" -ge 1 ] && [ "$REPLY" -le 4 ]; then
@@ -23,14 +51,129 @@ setEccubeVersion()
   echo "$VAR"
 }
 
-cloneECCUBE()
+getExistingURL()
 {
-  local ECCUBE_VERSION="$1"
-  # カレントディレクトリにeccubeディレクトリが存在しない場合
-  if [ ! -d ./eccube ]; then
-    mkdir eccube
+  read -ep "クローンするリポジトリURLを入力してください ${CR}" URL
+  while :
+  do
+    if [ -z "$URL" ]; then
+      read -ep "クローンするリポジトリURLを入力してください ${CR}" URL
+    else
+      break
+    fi
+  done
+
+  while :
+  do
+    read -ep "クローンするリポジトリURLは
+${URL}
+でよろしいでしょうか？ y/n ${CR}" CONFIRM
+
+    case "$CONFIRM" in
+      "y" | "Y" | "yes" | "YES" )
+        break
+        ;;
+      "n" | "N" | "no" | "NO" )
+        read -ep "クローンするリポジトリURLを入力してください ${CR}" URL
+        ;;
+    esac
+  done
+
+  echo "$URL"
+}
+
+cloneEccube()
+{
+  local URL="$1"
+  FILE_DIR="$0"
+  EQDOCK_ROOT_DIR="${FILE_DIR%/*}/../"
+
+  # ShellScript並列化
+  . "${EQDOCK_ROOT_DIR}bin/cloneEccube.sh" "$URL" &
+}
+
+createEccubeEnv()
+{
+  local DB_KIND="$1"
+  local DB_VERSION="$2"
+  case "$DB_KIND" in
+    "mysql" )
+      local PLATFORM="mysql"
+      local DATABASE_SERVER_VERSION="5"
+      ;;
+    "postgres" )
+      local PLATFORM="postgresql"
+      if [ $DB_VERSION -eq 10 ]; then
+        local DATABASE_SERVER_VERSION="10"
+      else
+        local DATABASE_SERVER_VERSION="9"
+      fi
+      ;;
+  esac
+  local DB_NAME="$3"
+  local DB_USER="$4"
+  local DB_PASSWD="$5"
+  local CUR_DIR=$(echo ${PWD##*/})
+
+  local DATABASE_URL="${PLATFORM}://${DB_USER}:${DB_PASSWD}@db/${DB_NAME}"
+  echo "$DATABASE_URL" 1>&2
+
+  local AUTH_MAGIC=`mktemp /tmp/temp.XXXXXXXXXXXXXXXX`
+  if [ $? -eq 0 ]; then
+    rm "$AUTH_MAGIC" ; AUTH_MAGIC=${AUTH_MAGIC#/tmp/temp.}
   fi
 
-  git clone https://github.com/EC-CUBE/ec-cube.git -b "$ECCUBE_VERSION" ./eccube
-  rm -rf ./eccube/.git ./eccube/.github ./eccube/docker
+  cat << ENV > ./eccube/.env
+# This file is a "template" of which env vars needs to be defined in your configuration or in an .env file
+# Set variables here that may be different on each deployment target of the app, e.g. development, staging, production.
+# https://symfony.com/doc/current/best_practices/configuration.html#infrastructure-related-configuration
+
+###> symfony/framework-bundle ###
+APP_ENV=dev
+APP_DEBUG=1
+#TRUSTED_PROXIES=127.0.0.1,127.0.0.2
+#TRUSTED_HOSTS=localhost,example.com
+###< symfony/framework-bundle ###
+
+###> doctrine/doctrine-bundle ###
+# Format described at http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html#connecting-using-a-url
+# For a sqlite database, use: "sqlite:///%kernel.project_dir%/var/data.db"
+# Set "serverVersion" to your server version to avoid edge-case exceptions and extra database calls
+DATABASE_URL=${DATABASE_URL}
+# The version of your database engine
+DATABASE_SERVER_VERSION=${DATABASE_SERVER_VERSION}
+###< doctrine/doctrine-bundle ###
+
+###> symfony/swiftmailer-bundle ###
+# For Gmail as a transport, use: "gmail://username:password@localhost"
+# For a generic SMTP server, use: "smtp://localhost:25?encryption=&auth_mode="
+# Delivery is disabled by default via "null://localhost"
+MAILER_URL=null://localhost
+###< symfony/swiftmailer-bundle ###
+
+###> APPLICATION CONFIG ###
+# EC-CUBE Configs. The default value is defined in app/config/packages/eccube.yaml.
+# Please remove commented out and enable it if you want to change.
+
+#ECCUBE_LOCALE=ja
+#ECCUBE_TIMEZONE=Asia/Tokyo
+#ECCUBE_CURRENCY=JPY
+#ECCUBE_ADMIN_ROUTE=admin
+#ECCUBE_USER_DATA_ROUTE=user_data
+#ECCUBE_ADMIN_ALLOW_HOSTS=[]
+#ECCUBE_FORCE_SSL=false
+#ECCUBE_TEMPLATE_CODE=default
+#ECCUBE_AUTH_MAGIC=<change.me>
+#ECCUBE_COOKIE_NAME=eccube
+#ECCUBE_COOKIE_PATH=/
+#ECCUBE_COOKIE_LIFETIME=0
+#ECCUBE_GC_MAXLIFETIME=1440
+
+###< APPLICATION CONFIG ###
+
+ECCUBE_AUTH_MAGIC=${AUTH_MAGIC}
+ECCUBE_ADMIN_ROUTE=admin
+ECCUBE_TEMPLATE_CODE=default
+ECCUBE_LOCALE=ja
+ENV
 }

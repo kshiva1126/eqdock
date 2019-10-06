@@ -113,11 +113,28 @@ DOCKER_COMPOSE
     volumes:
       - ${CUR_DIR}-app-data:/var/www/html
     ports:
-      - 8080:80
+      - 443:443
+      - 80:80
     stdin_open: true
     tty: true
     depends_on:
       - sftp
 
 DOCKER_COMPOSE
+}
+
+upDockerCompose()
+{
+  tar -czvf ./Docker/app/dockerbuild/upload.tar.gz ./eccube
+
+  docker-compose up -d --build
+  if [ "$?" != 0 ]; then
+    exit 1
+  fi
+
+  docker-compose exec app bin/console eccube:install --no-interaction
+
+  IP_ADDRESS=$(docker-machine ls | tail -1 | awk '{print $5}' | sed -e 's/tcp:\/\///' | sed -e 's/:[0-9]*//')
+  echo "EC-CUBEの環境構築が完了しました 下記URLよりアクセスできます
+https://${IP_ADDRESS}:443"
 }
