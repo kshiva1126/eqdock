@@ -1,0 +1,36 @@
+CR=`echo $'\n> '`
+
+checkFromTheBeginningOrTheMiddle()
+{
+  read -ep "すでに存在しているEC-CUBEの"
+}
+
+
+
+# SELECT EC-CUBE VERSION
+setEccubeVersion()
+{
+  local -a ARRAY=("4.0.0" "4.0.1" "4.0.2" "4.0.3")
+  echo -e "インストールしたいEC-CUBEのバージョンを選択してください" 1>&2
+  select VAR in "${ARRAY[@]}"
+  do
+    if [ "$REPLY" -ge 1 ] && [ "$REPLY" -le 4 ]; then
+      break
+    fi
+    echo "1~4で入力してください" 1>&2
+  done
+
+  echo "$VAR"
+}
+
+cloneECCUBE()
+{
+  local ECCUBE_VERSION="$1"
+  # カレントディレクトリにeccubeディレクトリが存在しない場合
+  if [ ! -d ./eccube ]; then
+    mkdir eccube
+  fi
+
+  git clone https://github.com/EC-CUBE/ec-cube.git -b "$ECCUBE_VERSION" ./eccube
+  rm -rf ./eccube/.git ./eccube/.github ./eccube/docker
+}

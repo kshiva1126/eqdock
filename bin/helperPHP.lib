@@ -1,0 +1,24 @@
+setPHPVersion()
+{
+  local ECCUBE_VERSION="$1"
+  case "$ECCUBE_VERSION" in
+    "4.0.0" | "4.0.1" )
+      local ARRAY=("7.1" "7.2")
+      ;;
+    * )
+      local ARRAY=("7.1" "7.2" "7.3")
+      ;;
+  esac
+
+  local ARRAY_LEN="${#ARRAY[@]}"
+  echo -e "インストールしたいPHPのバージョンを選択してください" 1>&2
+  select VAR in "${ARRAY[@]}"
+  do
+    if [ "$REPLY" -ge 1 ] && [ "$REPLY" -le $ARRAY_LEN ]; then
+      break
+    fi
+    echo "1~${ARRAY_LEN}で入力してください" 1>&2
+  done
+
+  echo "$VAR"
+}

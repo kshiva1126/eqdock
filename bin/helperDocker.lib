@@ -1,0 +1,123 @@
+copyDockerMaterial()
+{
+  local DB_KIND="$1"
+  local FILE_DIR="$0"
+  EQDOCK_ROOT_DIR="${FILE_DIR%/*}/../"
+
+  if [ ! -d ./Docker ]; then
+    mkdir -p ./Docker/app ./Docker/db
+  fi
+
+  cp -r "${EQDOCK_ROOT_DIR}Docker/app" ./Docker
+  cp "${EQDOCK_ROOT_DIR}Docker/db/${DB_KIND}/Dockerfile" ./Docker/db
+}
+
+rewriteDockerfile()
+{
+  local DB_KIND="$1"
+  local DB_VERSION="$2"
+  local PHP_VERSION="$3"
+
+  # DB
+  local DB_FROM="FROM ${DB_KIND}:${DB_VERSION}"
+  sed -i -e "/^FROM/d" "./Docker/db/Dockerfile"
+  sed -i "1i ${DB_FROM}" "./Docker/db/Dockerfile"
+
+  # PHP
+  local PHP_FROM="FROM php:${PHP_VERSION}-apache-stretch"
+  sed -i -e "/^FROM/d" "./Docker/app/Dockerfile"
+  sed -i "1i ${PHP_FROM}" "./Docker/app/Dockerfile"
+}
+
+rewriteDockerCompose()
+{
+  local DB_KIND="$1"
+  local DB_NAME="$2"
+  local DB_USER="$3"
+  local DB_PASSWD="$4"
+  local DB_ROOT_PASSWD="$5"
+
+  local CUR_DIR=$(echo ${PWD##*/})
+
+  # DEFAULT
+  cat << DOCKER_COMPOSE > ./docker-compose.yml
+version: "3"
+
+volumes:
+  ${CUR_DIR}-app-data:
+    driver: local
+  ${CUR_DIR}-db-data:
+    driver: local
+
+services:
+  sftp:
+    image: atmoz/sftp
+    privileged: true
+    container_name: ${CUR_DIR}_sftp
+    ports:
+      - "2222:22"
+    command: 'sftp:pass:33:33:upload'
+    volumes:
+      - ${CUR_DIR}-app-data:/home/sftp/upload
+    depends_on:
+      - db
+
+DOCKER_COMPOSE
+
+
+  # DB
+  cat << DOCKER_COMPOSE >> ./docker-compose.yml
+  db:
+    build:
+      context: ./Docker/db
+      dockerfile: Dockerfile
+    container_name: ${CUR_DIR}_db
+DOCKER_COMPOSE
+  case "$DB_KIND" in
+    "mysql" )
+  cat << DOCKER_COMPOSE >> ./docker-compose.yml
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWD}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWD}
+    volumes:
+      - ${CUR_DIR}-db-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+
+DOCKER_COMPOSE
+      ;;
+    "postgres" )
+  cat << DOCKER_COMPOSE >> ./docker-compose.yml
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWD}
+    volumes:
+      - ${CUR_DIR}-db-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+DOCKER_COMPOSE
+      ;;
+  esac
+
+  # PHP
+  cat << DOCKER_COMPOSE >> ./docker-compose.yml
+  app:
+    build:
+      context: ./Docker/app
+      dockerfile: Dockerfile
+    container_name: ${CUR_DIR}_app
+    volumes:
+      - ${CUR_DIR}-app-data:/var/www/html
+    ports:
+      - 8080:80
+    stdin_open: true
+    tty: true
+    depends_on:
+      - sftp
+
+DOCKER_COMPOSE
+}
