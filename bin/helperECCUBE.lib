@@ -12,12 +12,12 @@ GitHubの公式EC-CUBEリポジトリからクローンする場合は1、
 
   case "$IS_BEGINNING_OR_MIDDLE" in
     "1" )
-      local TAG=`setEccubeVersion` "$IS_BEGINNING_OR_MIDDLE"
+      local TAG=`setEccubeVersion "$IS_BEGINNING_OR_MIDDLE"`
       local URL="https://github.com/EC-CUBE/ec-cube.git -b ${TAG}"
       ;;
     "2" )
       local URL=`getExistingURL`
-      local TAG=`setEccubeVersion` "$IS_BEGINNING_OR_MIDDLE"
+      local TAG=`setEccubeVersion "$IS_BEGINNING_OR_MIDDLE"`
       ;;
   esac
 
@@ -28,7 +28,7 @@ GitHubの公式EC-CUBEリポジトリからクローンする場合は1、
 # SELECT EC-CUBE VERSION
 setEccubeVersion()
 {
-  IS_BEGINING_OR_MIDDLE="$1"
+  local IS_BEGINNING_OR_MIDDLE="$1"
   echo "$IS_BEGINNING_OR_MIDDLE" 1>&2
   local -a ARRAY=("4.0.0" "4.0.1" "4.0.2" "4.0.3")
   case "$IS_BEGINNING_OR_MIDDLE" in
