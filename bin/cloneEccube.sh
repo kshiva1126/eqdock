@@ -11,4 +11,4 @@ if [ ! -d ./eccube ]; then
   mkdir eccube
 fi
 
-# git clone $URL -q ./eccube/
+git clone $URL -q ./eccube/
