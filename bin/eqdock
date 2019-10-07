@@ -6,6 +6,9 @@ EQDOCK_ROOT_DIR="${FILE_DIR%/*}/../"
 
 echo "Hello eqdock!"
 
+. "${EQDOCK_ROOT_DIR}bin/helperDocker.lib"
+checkDockerMachineActive
+
 . "${EQDOCK_ROOT_DIR}bin/helperECCUBE.lib"
 
 ECCUBE_VERSION=`checkFromTheBeginningOrTheMiddle`
@@ -40,7 +43,6 @@ echo "$PHP_VERSION"
 
 # git clone終了を待つ
 wait
-. "${EQDOCK_ROOT_DIR}bin/helperDocker.lib"
 
 createEccubeEnv "$DB_KIND" "$DB_VERSION" "$DB_NAME" "$DB_USER" "$DB_PASSWD"
 

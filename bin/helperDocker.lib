@@ -138,3 +138,13 @@ upDockerCompose()
   echo "EC-CUBEの環境構築が完了しました 下記URLよりアクセスできます
 https://${IP_ADDRESS}:443"
 }
+
+checkDockerMachineActive()
+{
+  ACTIVE=$(docker-machine ls | tail -1l | awk '{print $2}')
+  if [ "_${ACTIVE}" != "_*" ]; then
+    echo "docker-machineが起動していません
+起動後、*eqdock*コマンドを実行してください" 1>&2
+    exit 1
+  fi
+}
