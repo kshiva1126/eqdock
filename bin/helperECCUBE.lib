@@ -89,7 +89,8 @@ cloneEccube()
   EQDOCK_ROOT_DIR="${FILE_DIR%/*}/../"
 
   # ShellScript並列化
-  . "${EQDOCK_ROOT_DIR}bin/cloneEccube.sh" "$URL" &
+  # sh "${EQDOCK_ROOT_DIR}bin/cloneEccube.sh" "$URL" &> /dev/null &
+  sh "${EQDOCK_ROOT_DIR}bin/cloneEccube.sh" "$URL"
 }
 
 createEccubeEnv()

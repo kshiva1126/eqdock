@@ -7,7 +7,7 @@ EQDOCK_ROOT_DIR="${FILE_DIR%/*}/../"
 echo "Hello eqdock!"
 
 . "${EQDOCK_ROOT_DIR}bin/helperDocker.lib"
-checkDockerMachineActive
+# checkDockerMachineActive
 
 . "${EQDOCK_ROOT_DIR}bin/helperECCUBE.lib"
 
@@ -15,31 +15,64 @@ ECCUBE_VERSION=`checkFromTheBeginningOrTheMiddle`
 echo "$ECCUBE_VERSION"
 
 . "${EQDOCK_ROOT_DIR}bin/helperDB.lib"
-
-DB_KIND=`setDBKind`
-echo "$DB_KIND"
-
-DB_VERSION=`setDBVersion "${DB_KIND}"`
-echo "$DB_VERSION"
-
-DB_NAME=`setDBName`
-echo "$DB_NAME"
-
-DB_USER=`setDBUser`
-echo "$DB_USER"
-
-DB_PASSWD=`setDBPasswd`
-echo "$DB_PASSWD"
-
-if [ "_${DB_KIND}" = "_mysql" ]; then
-  DB_ROOT_PASSWD=`setDBRootPasswd`
-  echo "$DB_ROOT_PASSWD"
-fi
-
 . "${EQDOCK_ROOT_DIR}bin/helperPHP.lib"
 
-PHP_VERSION=`setPHPVersion "${ECCUBE_VERSION}"`
-echo "$PHP_VERSION"
+while :
+do
+  DB_KIND=`setDBKind`
+  DB_VERSION=`setDBVersion "${DB_KIND}"`
+  DB_NAME=`setDBName`
+  DB_USER=`setDBUser`
+  DB_PASSWD=`setDBPasswd`
+
+  if [ "_${DB_KIND}" = "_mysql" ]; then
+    DB_ROOT_PASSWD=`setDBRootPasswd`
+    echo "$DB_ROOT_PASSWD"
+  fi
+
+  PHP_VERSION=`setPHPVersion "${ECCUBE_VERSION}"`
+
+  MSG="この内容で環境構築を行います。
+よろしいでしょうか？ y/n"
+  case "$DB_KIND" in
+    "mysql" )
+      MSG="${MSG}
+DB
+DB : ${DB_KIND}
+DBバージョン : ${DB_VERSION}
+DB名 : ${DB_NAME}
+DBユーザ : ${DB_USER}
+DBパスワード : ${DB_PASSWD}
+DBrootパスワード : ${DB_ROOT_PASSWD}
+
+PHP
+PHPバージョン ; ${PHP_VERSION}"
+      ;;
+    "postgres" )
+      MSG="${MSG}
+DB
+DB : ${DB_KIND}
+DBバージョン : ${DB_VERSION}
+DB名 : ${DB_NAME}
+DBユーザ : ${DB_USER}
+DBパスワード : ${DB_PASSWD}
+
+PHP
+PHPバージョン ; ${PHP_VERSION}"
+      ;;
+  esac
+  read -ep "${MSG} ${CR}" IS_OK
+
+  case "$IS_OK" in
+    "y" | "yes" | "Y" | "YES" )
+      break
+      ;;
+    "n" | "no" | "N" | "NO" )
+      ;;
+  esac
+
+done
+
 
 # git clone終了を待つ
 wait

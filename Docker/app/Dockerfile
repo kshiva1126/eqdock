@@ -49,7 +49,7 @@ COPY dockerbuild/.vimrc /root/
 COPY dockerbuild/installEccube.sh /var/www/html
 COPY dockerbuild/upload.tar.gz /var/www/html
 
-RUN cd /var/www/html && chmod 755 upload.tar.gz && ./installEccube.sh
+RUN cd /var/www/ && chmod -R 777 html/ && cd html/ && chmod 755 upload.tar.gz installEccube.sh &&./installEccube.sh
 
 USER root
 
