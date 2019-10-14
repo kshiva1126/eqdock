@@ -12,11 +12,10 @@ checkDockerMachineActive
 . "${EQDOCK_ROOT_DIR}bin/helperECCUBE.lib"
 
 ECCUBE_VERSION=`checkFromTheBeginningOrTheMiddle`
-echo "$ECCUBE_VERSION"
 
 . "${EQDOCK_ROOT_DIR}bin/helperDB.lib"
 . "${EQDOCK_ROOT_DIR}bin/helperPHP.lib"
-
+ECCUBE_VERSION="4.0.3"
 while :
 do
   DB_KIND=`setDBKind`
@@ -33,41 +32,31 @@ do
   PHP_VERSION=`setPHPVersion "${ECCUBE_VERSION}"`
 
   MSG="この内容で環境構築を行います。
-よろしいでしょうか？ y/n"
+よろしいでしょうか？ y/n
+      DB : ${DB_KIND}
+      DBバージョン : ${DB_VERSION}
+      DB名 : ${DB_NAME}
+      DBユーザ : ${DB_USER}
+      DBパスワード : ${DB_PASSWD}"
   case "$DB_KIND" in
     "mysql" )
       MSG="${MSG}
-DB
-DB : ${DB_KIND}
-DBバージョン : ${DB_VERSION}
-DB名 : ${DB_NAME}
-DBユーザ : ${DB_USER}
-DBパスワード : ${DB_PASSWD}
-DBrootパスワード : ${DB_ROOT_PASSWD}
-
-PHP
-PHPバージョン ; ${PHP_VERSION}"
+      DBrootパスワード : ${DB_ROOT_PASSWD}
+      PHPバージョン : ${PHP_VERSION}"
       ;;
     "postgres" )
       MSG="${MSG}
-DB
-DB : ${DB_KIND}
-DBバージョン : ${DB_VERSION}
-DB名 : ${DB_NAME}
-DBユーザ : ${DB_USER}
-DBパスワード : ${DB_PASSWD}
-
-PHP
-PHPバージョン ; ${PHP_VERSION}"
+      PHPバージョン : ${PHP_VERSION}"
       ;;
   esac
+
   read -ep "${MSG} ${CR}" IS_OK
 
   case "$IS_OK" in
     "y" | "yes" | "Y" | "YES" )
       break
       ;;
-    "n" | "no" | "N" | "NO" )
+    * )
       ;;
   esac
 

@@ -45,7 +45,7 @@ setDBVersion()
 setDBName()
 {
   local REGEX='^[-0-9a-zA-Z_]+$'
-  read -ep "登録したいDB名を入力してください また文字を消去したい場合はctrl + uを使用してください${CR}" DB_NAME
+  read -ep "登録したいDB名を入力してください${CR}" DB_NAME
   while :
   do
     DB_NAME=$(echo "${DB_NAME}" | xargs)
@@ -68,7 +68,7 @@ setDBName()
 setDBUser()
 {
   local REGEX='^[-0-9a-zA-Z_]+$'
-  read -ep "登録したいDBユーザを入力してください また文字を消去したい場合はctrl + uを使用してください${CR}" DB_USER
+  read -ep "登録したいDBユーザを入力してください${CR}" DB_USER
   while :
   do
     DB_USER=$(echo "${DB_USER}" | xargs)
@@ -91,7 +91,7 @@ setDBUser()
 setDBPasswd()
 {
   local REGEX='^[!-/]|[0-9a-zA-Z]|[;-@]|[\[-_]|[{-~]+$'
-  read -ep "登録したいDBパスワードを入力してください また文字を消去したい場合はctrl + uを使用してください${CR}" DB_PASSWD
+  read -ep "登録したいDBパスワードを入力してください${CR}" DB_PASSWD
   while :
   do
     DB_PASSWD=$(echo "${DB_PASSWD}" | xargs)
@@ -114,7 +114,7 @@ setDBPasswd()
 setDBRootPasswd()
 {
   local REGEX='^[!-/]|[0-9a-zA-Z]|[;-@]|[\[-_]|[{-~]+$'
-  read -ep "登録したいDBrootパスワードを入力してください また文字を消去したい場合はctrl + uを使用してください${CR}" DB_ROOT_PASSWD
+  read -ep "登録したいDBrootパスワードを入力してください${CR}" DB_ROOT_PASSWD
   while :
   do
     DB_ROOT_PASSWD=$(echo "${DB_ROOT_PASSWD}" | xargs)
