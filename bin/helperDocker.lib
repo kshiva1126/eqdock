@@ -10,6 +10,10 @@ copyDockerMaterial()
 
   cp -r "${EQDOCK_ROOT_DIR}Docker/app" ./Docker
   cp "${EQDOCK_ROOT_DIR}Docker/db/${DB_KIND}/Dockerfile" ./Docker/db
+
+  if [ ! -d ./Docker/db/init.d ]; then
+    mkdir ./Docker/db/init.d
+  fi
 }
 
 rewriteDockerfile()

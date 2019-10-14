@@ -133,3 +133,81 @@ setDBRootPasswd()
 
   echo "$DB_ROOT_PASSWD"
 }
+
+checkInitial()
+{
+  DB_KIND="$1"
+  read -ep "DBに初期データを投入しますか? y/n${CR}" IS_INITIAL
+  while :
+  do
+    case "$IS_INITIAL" in
+      "y" | "yes" | "Y" | "yes" )
+        setInitialData "$DB_KIND"
+        ;;
+      "n" | "no" | "N" | "no" )
+        break
+        ;;
+      * )
+        read -ep "y/nで入力してください${CR}"
+        ;;
+    esac
+  done
+}
+
+setInitialData()
+{
+  DB_KIND="$1"
+  while :
+  do
+    read -ep "初期データまでの絶対パスを入力してください${CR}" PATH
+    if [ -z "$PATH" ]; then
+      read -ep "パスが指定されていません 初期データの投入を終了しますか? y/n${CR}" IS_OK
+      case "$IS_OK" in
+      "y" | "yes" | "Y" | "yes" )
+        braek
+        ;;
+      "n" | "no" | "N" | "no" )
+        continue
+        ;;
+      * )
+        read -ep "y/nで入力してください${CR}"
+        ;;
+      esac
+    fi
+
+    if [ -a "$PATH" ]; then
+      if [[ "$PATH" =~ \.sql$|\.sql\.gz|\.sh ]]; then
+        cp "$PATH" ./Docker/db/init.d
+        read -ep "続けて投入しますか？ y/n${CR}" IS_OK
+        case "$IS_OK" in
+          "y" | "yes" | "Y" | "yes" )
+            continue
+            ;;
+          "n" | "no" | "N" | "no" )
+            break
+            ;;
+          * )
+            read -ep "y/nで入力してください${CR}"
+            ;;
+        esac
+      else
+        echo -e "拡張子がsql/sql.gz/shのファイルを選択してください"
+        continue
+      fi
+    else
+      read -ep "ファイルが存在しません 初期データの投入を終了しますか? y/n${CR}" IS_OK
+      case "$IS_OK" in
+      "y" | "yes" | "Y" | "yes" )
+        braek
+        ;;
+      "n" | "no" | "N" | "no" )
+        continue
+        ;;
+      * )
+        read -ep "y/nで入力してください${CR}"
+        ;;
+      esac
+    fi
+
+  done
+}

@@ -62,13 +62,14 @@ do
 
 done
 
-
 # git clone終了を待つ
 wait
 
 createEccubeEnv "$DB_KIND" "$DB_VERSION" "$DB_NAME" "$DB_USER" "$DB_PASSWD"
 
 copyDockerMaterial "$DB_KIND"
+
+checkInitial "$DB_KIND"
 
 rewriteDockerfile "$DB_KIND" "$DB_VERSION" "$PHP_VERSION"
 
