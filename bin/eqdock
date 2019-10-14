@@ -7,7 +7,7 @@ EQDOCK_ROOT_DIR="${FILE_DIR%/*}/../"
 echo "Hello eqdock!"
 
 . "${EQDOCK_ROOT_DIR}bin/helperDocker.lib"
-# checkDockerMachineActive
+checkDockerMachineActive
 
 . "${EQDOCK_ROOT_DIR}bin/helperECCUBE.lib"
 
